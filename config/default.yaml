@@ -1,0 +1,11 @@
+topic:
+  UWB_topic_name: vo
+  acc_topic_name: imu
+  KF_pose_topic_name: KF_pose
+
+frame:
+  pose_frame: odom
+
+parameters:
+  dt_acc: 0.1
+  dt_UWB: 0.2

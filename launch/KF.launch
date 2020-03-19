@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node pkg="my_kf" type="my_kf_node" name="my_kf_node" output="screen" clear_params="true">
+      <rosparam file="$(find my_kf)/config/default.yaml" command="load" />
+  </node>
+
+  <!-- <include file= "$(find robot_pose_ekf)/robot_pose_ekf.launch" >
+  </include> -->
+
+</launch>
+

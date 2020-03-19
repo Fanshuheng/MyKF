@@ -13,6 +13,8 @@ geometry_msgs/Quaternion.h
 -
 geometry_msgs/PoseStamped.h
 -
+geometry_msgs/PointStamped.h
+-
 nav_msgs/Odometry.h
 -
 tf/transform_broadcaster.h
@@ -26,6 +28,8 @@ vector
 string
 -
 eigen3/Eigen/Dense
+-
+ros/console.h
 -
 
 /opt/ros/kinetic/include/geometry_msgs/Point.h

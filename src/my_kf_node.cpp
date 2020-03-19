@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Quaternion.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/PointStamped.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/transform_broadcaster.h>
 #include <tf/tf.h>
@@ -8,11 +9,14 @@
 #include <vector>
 #include <string>
 #include <eigen3/Eigen/Dense>
+#include <ros/console.h>
 
 double dt_acc = 0.1, dt_uwb = 0.1;//取样间隔
-Eigen::Vector3d acc_odom, uwb_measurement;
 ros::Time filter_time_old_;
 Eigen::Matrix3d Q_uwb, R_acc_odom;
+Eigen::Vector3d acc_odom, uwb_measurement;
+
+ros::Publisher pose_publisher;
 
 bool isAcc2Update = false, isUwb2Update = false;
 
@@ -59,6 +63,7 @@ void acc_update(const sensor_msgs::ImuConstPtr& imu_data){
         }else{
 
         }
+        std::cout << "s_now is :" << s_now << "\n";
         return;
 
     }
@@ -87,18 +92,39 @@ void uwb_update(const nav_msgs::OdometryConstPtr& uwb_data){
     return;
 }
 
+void kf(){
+
+}
+
 int main (int argc, char **argv){
     ros::init (argc, argv, "my_kf_node");
 
     ros::NodeHandle nh;
 
+    //话题订阅与发布
+    //位置publisher
+    std::string kf_topic;
+    nh.getParam("my_kf_node/topic/KF_pose_topic_name",kf_topic);
+    pose_publisher = nh.advertise<geometry_msgs::PointStamped>(kf_topic, 1);
+
     //订阅加速度数据
     std::string acc_topic;
+    nh.getParam("my_kf_node/topic/acc_topic_name",acc_topic);
     ros::Subscriber acc_subscriber = nh.subscribe(acc_topic, 1, acc_update);
 
     //订阅UWB数据
     std::string uwb_topic;
+    nh.getParam("my_kf_node/topic/UWB_topic_name",uwb_topic);
     ros::Subscriber uwb_subscriber = nh.subscribe(uwb_topic, 1, uwb_update);
+
+    //其他参数
+    //KF得到位置的参考系
+    std::string KF_pose_frame;//KF得到位置的参考系
+    nh.getParam("my_kf_node/frame/pose_frame",KF_pose_frame);
+
+    //更新间隔
+    nh.getParam("my_kf_node/parameters/dt_acc",dt_acc);
+    nh.getParam("my_kf_node/parameters/dt_UWB",dt_uwb);
 
     //状态转移矩阵A， 控制矩阵B， 观测矩阵C
     //X_hat(k+1) = AX_(k) + Bu_(k)
@@ -125,11 +151,11 @@ int main (int argc, char **argv){
          0, 0, 0;
 
     P_hat = P;
+
     //KF
     Eigen::Vector3d X_hat, X;
     X_hat << 0,0,0;
-    X = X_hat;
-
+    X << 0, 0, 0;
     while(ros::ok()){
 
         if(isAcc2Update){//运动预测部分
@@ -146,6 +172,17 @@ int main (int argc, char **argv){
             isUwb2Update = false;
         }
 
+        geometry_msgs::PointStamped KF_result;
+        KF_result.header.frame_id = KF_pose_frame;
+        KF_result.header.stamp = ros::Time::now();
+
+        KF_result.point.x = X(0,0);
+        KF_result.point.y = X(1,0);
+        KF_result.point.z = X(2,0);
+
+        pose_publisher.publish(KF_result);
+        ros::Rate rate(50);
+        rate.sleep();
     }
     return 0;
 }
