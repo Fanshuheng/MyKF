@@ -1,0 +1,8 @@
+prefix=/home/ch/code/catkin_ws_Multi-robots-master/src/my_kf/cmake-build-debug/devel
+
+Name: my_kf
+Description: Description of my_kf
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/ch/code/catkin_ws_Multi-robots-master/src/my_kf/cmake-build-debug/devel/lib 
+Requires: 
